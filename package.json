@@ -11,5 +11,13 @@
   "dependencies": {
     "request": "^2.83.0",
     "slimbot": "^0.7.7"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TarmoA/TG_bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TarmoA/TG_bot/issues"
+  },
+  "homepage": "https://github.com/TarmoA/TG_bot#readme"
 }
