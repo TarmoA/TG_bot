@@ -2,3 +2,4 @@ token.json
 node_modules/
 words.json
 log.txt
+errlog.txt
