@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --icu-data-dir=node_modules/full-icu ./App.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "full-icu": "^1.2.0",
+    "node-schedule": "^1.2.5",
     "request": "^2.83.0",
     "slimbot": "^0.7.7"
   },
