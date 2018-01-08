@@ -13,12 +13,12 @@ function logToFile(message, responseSent) {
     }
     const chatType = message.chat !== undefined ? message.chat.type : "-";
     const text = message.text !== undefined ? message.text : "-";
-    const chatId = message.chat !== undefined ? message.chat : "-";
+    const chatId = message.chat !== undefined ? message.chat.id : "-";
     logFile.write(date + " " + userStr + " " + chatId + " " + chatType + " " + text+ " " + responseSent + "\n");
 }
 
 function logError(msg) {
-    errFile.write(msg + "\n");
+    errFile.write(new Date().toLocaleString() + msg + "\n");
 }
 
 
