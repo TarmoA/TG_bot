@@ -46,11 +46,12 @@ function checkRateLimit(timestamp, type) {
     if (type === privN) {
         // 1s = 1000ms
         //30 messages per second
-        const limit = 1000;
+        const limit = 1;
         privateMsgQ.push(new Date(timestamp * 1000));
         if (privateMsgQ.length > 30) {
             var prev = privateMsgQ.shift();
-            var res = (new Date((timestamp - limit) * 1000) <= prev);
+            // did the earliest message (prev) happen more than limit seconds ago?
+            var res = (new Date((timestamp - limit) * 1000) >= prev);
             if (!res) Logger.logErr("private message ratelimit reached");
             return res;
         } else {
@@ -59,11 +60,11 @@ function checkRateLimit(timestamp, type) {
     } else {
         //1min = 60000ms
         //20 messages per minute
-        const limit = 60000;
+        const limit = 60;
         groupMsgQ.push(new Date(timestamp * 1000));
         if (groupMsgQ.length > 20) {
             var prev = groupMsgQ.shift();
-            var res = (new Date((timestamp - limit) * 1000) <= prev);
+            var res = (new Date((timestamp - limit) * 1000) >= prev);
             if (!res) Logger.logErr("group message limit reached");
             return res;
         } else {
