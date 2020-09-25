@@ -12,9 +12,9 @@ class HuhuGen  {
     }
 
 
-    generateHuhu(knownUsers) {
+    generateHuhu(knownUsers, forceKnown = false) {
         var parsed = data;
-        var useKnownNames = Math.random() < 0.8;
+        var useKnownNames = forceKnown || Math.random() < 0.8;
         var singulars, plurals;
         if (useKnownNames) {
             singulars = knownUsers;

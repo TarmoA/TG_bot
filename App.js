@@ -17,6 +17,12 @@ function parseMsg(msg, cb) {
         cb("pong")
     } else if (text.match("/huhu(@"+botName+")?")) {
         const username = msg.from.first_name;
+        const cleared = text.replace('/huhu', '').replace(`@${botName}`, '').trim();
+        if (cleared) {
+            console.log(cleared)
+            cb(generator.generateHuhu([cleared], true))
+            return;
+        }
         knownUserStore.getUsers(msg.chat.id, knownUsers => {
             let users = knownUsers
             if (!knownUsers.includes(username)) {
@@ -121,7 +127,7 @@ slimbot.on("message", message => {
             });
         }
     }
-    Logger.logMsg(message, responseSent);
+    // Logger.logMsg(message, responseSent);
 });
 
 // Should fire at 10 on the local timezone
