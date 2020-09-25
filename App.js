@@ -6,14 +6,25 @@ const generator = new HuhuGen();
 const Logger = require("./Logger.js");
 const DailyMessage = require("./dailyMessage.js");
 const botName = "HuhuBot";
+const knownUserStore = require('./KnownUserStore.js');
 
 const dailySubsFile = "./dailyrecipients.json"
 
 
-function parseMsg(msg) {
+function parseMsg(msg, cb) {
     const text = msg.text;
-    if (text.match("/huhu(@"+botName+")?")) {
-        return generator.generateHuhu();
+    if (text.match("/ping")) {
+        cb("pong")
+    } else if (text.match("/huhu(@"+botName+")?")) {
+        const username = msg.from.first_name;
+        knownUserStore.getUsers(msg.chat.id, knownUsers => {
+            let users = knownUsers
+            if (!knownUsers.includes(username)) {
+                knownUserStore.storeUser(msg.chat.id, username)
+                users = knownUsers.concat([username]);
+            }
+            cb(generator.generateHuhu(users))
+        });
     } else if (text.match("/subscribe(@"+botName+")?")) {
         DailyMessage.addRecipient(msg.chat.id, dailySubsFile, function() {
             dailyObj = reschedule(dailyObj);
@@ -22,11 +33,20 @@ function parseMsg(msg) {
         DailyMessage.removeRecipient(msg.chat.id, dailySubsFile, function() {
             dailyObj = reschedule(dailyObj);
         });
-    } else {
-        return null;
+    } else if (text.match("/lisaanimi(@" + botName + ")?")) {
+        addUsers(msg);
     }
+}
 
-
+function addUsers(msg) {
+    const text = msg.text;
+    const names = text.split(" ");
+    names.splice(0,1);
+    names
+    .filter(n => n.trim() !== "")
+    .forEach(name => {
+        knownUserStore.storeUser(msg.chat.id, name)
+    })
 }
 
 //Makes the bot not respons to messages for a minute
@@ -87,17 +107,18 @@ slimbot.on("message", message => {
             const chatType = (message.chat.type === "private" ? privN : groupN);
             const text = message.text
         if (text && text.length !== 0 && text[0] === "/" && checkRateLimit(message.date, chatType) ) {
-            const response = parseMsg(message);
-            if (response) {
-                slimbot.sendMessage(message.chat.id, response, function(err, msg){
-                    if (err) {
-                        Logger.logErr("got 429 error");
-                        //timeout the bot for 60 seconds
-                        timeoutBot();
-                    }
-                });
-                responseSent = true;
-            }
+            parseMsg(message, response => {
+                if (response) {
+                    slimbot.sendMessage(message.chat.id, response, function(err, msg){
+                        if (err) {
+                            Logger.logErr("got 429 error");
+                            //timeout the bot for 60 seconds
+                            timeoutBot();
+                        }
+                    });
+                    responseSent = true;
+                }
+            });
         }
     }
     Logger.logMsg(message, responseSent);

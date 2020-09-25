@@ -12,15 +12,25 @@ class HuhuGen  {
     }
 
 
-    generateHuhu() {
+    generateHuhu(knownUsers) {
         var parsed = data;
-        var subjSingularSize = parsed.subjects.singular.length;
-        var totalSubjSize = subjSingularSize + parsed.subjects.plural.length;
+        var useKnownNames = Math.random() < 0.8;
+        var singulars, plurals;
+        if (useKnownNames) {
+            singulars = knownUsers;
+            plurals = [];
+        } else {
+            singulars = parsed.subjects.singular;
+            plurals = parsed.subjects.plural;
+        }
+        var subjSingularSize = singulars.length;
+
+        var totalSubjSize = subjSingularSize + plurals.length;
 
         var subjI = this.randomIndex(totalSubjSize);
         var singular = subjI < subjSingularSize;
         var subjI = singular ? subjI : subjI - subjSingularSize;
-        var subj = singular ? parsed.subjects.singular[subjI] : parsed.subjects.plural[subjI];
+        var subj = singular ? singulars[subjI] : plurals[subjI];
 
         var verbArr = singular ? parsed.verbs.singular : parsed.verbs.plural;
         var verb = verbArr[this.randomIndex(verbArr.length)];
@@ -28,7 +38,7 @@ class HuhuGen  {
         var objArr = singular ? parsed.objects.singular : parsed.objects.plural;
         objArr = objArr.concat(parsed.objects.both);
         var obj = objArr[this.randomIndex(objArr.length)];
-        
+
         var res = "Huhutaan että "+ subj + " " + verb + " " + obj;
         return  res;
     }
