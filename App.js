@@ -5,7 +5,7 @@ const HuhuGen = require("./huhu.js");
 const generator = new HuhuGen();
 const Logger = require("./Logger.js");
 const DailyMessage = require("./dailyMessage.js");
-const botName = "HuhuBot";
+const botName = "huhutaan_bot";
 const knownUserStore = require('./KnownUserStore.js');
 
 const dailySubsFile = "./dailyrecipients.json"
@@ -58,6 +58,7 @@ function addUsers(msg) {
 //Makes the bot not respons to messages for a minute
 var onTimeout = false;
 function timeoutBot() {
+    console.log("timeout")
     onTimeout = true;
     setTimeout(function(){ onTimeout = false;}, 60000);
 }
@@ -103,6 +104,7 @@ function checkRateLimit(timestamp, type) {
 
 // Register listeners
 slimbot.on("message", message => {
+    console.log("msg")
     if (onTimeout) return;
     var responseSent = false;
     //Don't respond to messages older than a minute

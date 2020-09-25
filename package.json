@@ -13,7 +13,7 @@
     "full-icu": "^1.2.0",
     "node-schedule": "^1.2.5",
     "request": "^2.83.0",
-    "slimbot": "^0.7.7",
+    "slimbot": "^4.9.0",
     "sqlite3": "^5.0.0"
   },
   "repository": {
