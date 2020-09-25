@@ -19,7 +19,6 @@ function parseMsg(msg, cb) {
         const username = msg.from.first_name;
         const cleared = text.replace('/huhu', '').replace(`@${botName}`, '').trim();
         if (cleared) {
-            console.log(cleared)
             cb(generator.generateHuhu([cleared], true))
             return;
         }
