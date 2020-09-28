@@ -103,32 +103,26 @@ function checkRateLimit(timestamp, type) {
 
 // Register listeners
 slimbot.on("message", message => {
-    console.log("msg")
     if (onTimeout) return;
     var responseSent = false;
-    //Don't respond to messages older than a minute
-    if (message.date * 1000 < Date.now()- 60000 ) {
-        Logger.logErr("received old message");
 
-    } else {
-            const chatType = (message.chat.type === "private" ? privN : groupN);
-            const text = message.text
-        if (text && text.length !== 0 && text[0] === "/" && checkRateLimit(message.date, chatType) ) {
-            parseMsg(message, response => {
-                if (response) {
-                    slimbot.sendMessage(message.chat.id, response, function(err, msg){
-                        if (err) {
-                            Logger.logErr("got 429 error");
-                            //timeout the bot for 60 seconds
-                            timeoutBot();
-                        }
-                    });
-                    responseSent = true;
-                }
-            });
-        }
+    const chatType = (message.chat.type === "private" ? privN : groupN);
+    const text = message.text
+    if (text && text.length !== 0 && text[0] === "/" && checkRateLimit(message.date, chatType) ) {
+        parseMsg(message, response => {
+            if (response) {
+                slimbot.sendMessage(message.chat.id, response, function(err, msg){
+                    if (err) {
+                        Logger.logErr("got 429 error");
+                        //timeout the bot for 60 seconds
+                        timeoutBot();
+                    }
+                });
+                responseSent = true;
+            }
+        });
     }
-    // Logger.logMsg(message, responseSent);
+    Logger.logMsg(message, responseSent);
 });
 
 // Should fire at 10 on the local timezone
