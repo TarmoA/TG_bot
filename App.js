@@ -31,10 +31,12 @@ function parseMsg(msg, cb) {
     } else if (text.match("/subscribe(@"+botName+")?")) {
         DailyMessage.addRecipient(msg.chat.id, function() {
             reschedule();
+            cb("sub ok"); //maybe
         });
     } else if (text.match("/unsubscribe(@"+botName+")?")) {
         DailyMessage.removeRecipient(msg.chat.id, function() {
             reschedule();
+            cb("unsub ok"); // maybe
         });
     } else if (text.match("/lisaanimi(@" + botName + ")?")) {
         addUsers(msg);

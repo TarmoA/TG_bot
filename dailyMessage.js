@@ -64,9 +64,7 @@ const funcs = {
 // returns a recipient list and the scheduled job wrapped in an object
 
     init: function(time, sendMessages, onFinished) {
-        console.log('init')
         getRecipients(recipients => {
-            console.log(recipients)
             const job = schedule.scheduleJob(time, function() {
                 sendMessages(recipients);
             });
