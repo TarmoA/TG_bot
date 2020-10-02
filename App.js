@@ -1,14 +1,12 @@
 const Slimbot = require("slimbot");
-const token = require("./token");
-const slimbot = new Slimbot(token.token);
+const config = require("./config");
+const slimbot = new Slimbot(config.token);
 const HuhuGen = require("./huhu.js");
 const generator = new HuhuGen();
 const Logger = require("./Logger.js");
 const DailyMessage = require("./dailyMessage.js");
-const botName = "huhutaan_bot";
+const botName = config.bot_name;
 const knownUserStore = require('./KnownUserStore.js');
-
-const dailySubsFile = "./dailyrecipients.json"
 
 
 function parseMsg(msg, cb) {
@@ -31,12 +29,12 @@ function parseMsg(msg, cb) {
             cb(generator.generateHuhu(users))
         });
     } else if (text.match("/subscribe(@"+botName+")?")) {
-        DailyMessage.addRecipient(msg.chat.id, dailySubsFile, function() {
-            dailyObj = reschedule(dailyObj);
+        DailyMessage.addRecipient(msg.chat.id, function() {
+            reschedule();
         });
     } else if (text.match("/unsubscribe(@"+botName+")?")) {
-        DailyMessage.removeRecipient(msg.chat.id, dailySubsFile, function() {
-            dailyObj = reschedule(dailyObj);
+        DailyMessage.removeRecipient(msg.chat.id, function() {
+            reschedule();
         });
     } else if (text.match("/lisaanimi(@" + botName + ")?")) {
         addUsers(msg);
@@ -100,7 +98,6 @@ function checkRateLimit(timestamp, type) {
 }
 
 
-
 // Register listeners
 slimbot.on("message", message => {
     if (onTimeout) return;
@@ -125,43 +122,47 @@ slimbot.on("message", message => {
     Logger.logMsg(message, responseSent);
 });
 
+var dailyObj = {}
 // Should fire at 10 on the local timezone
 function initDaily() {
-    return DailyMessage.init("0 10 * * *", dailySubsFile, function(q) {
-        var huhu = generator.generateHuhu();
-        // var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        // new Date().toLocaleDateString("fi", options)
-        var message = "Päivän huhu: \n" + huhu;
+    return DailyMessage.init("0 10 * * *", function(q) {
         var queue = q;
+        if (!queue.length) {
+            return;
+        }
         var interval = setInterval(function() {
             var id = queue.shift();
-
-            slimbot.sendMessage(id, message, function(err, msg){
-                if (err) {
-                    Logger.logErr("got error(429?) on daily message send");
-                    //timeout the bot for 60 seconds
-                    timeoutBot();
-                }
+            knownUserStore.getUsers(id, users => {
+                console.log(users)
+                const huhu = generator.generateHuhu(users);
+                var message = "Päivän huhu: \n" + huhu;
+                slimbot.sendMessage(id, message, function(err, msg){
+                    if (err) {
+                        Logger.logErr("got error(429?) on daily message send");
+                        //timeout the bot for 60 seconds
+                        timeoutBot();
+                    }
+                });
             });
 
             if (queue.length === 0) {
                 clearInterval(interval);
             }
         }, 500);
-
-
+    }, (obj) => {
+        dailyObj = obj;
     });
-
 }
 
-function reschedule(obj) {
-    obj.job.cancel();
-    obj = initDaily();
-    return obj;
+function reschedule() {
+    const obj = dailyObj
+    if (obj && obj.job) {
+        obj.job.cancel();
+    }
+    initDaily();
 }
 
-var dailyObj = initDaily();
-
+initDaily()
 
 // Call API
 

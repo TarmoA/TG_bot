@@ -1,78 +1,80 @@
 var schedule = require('node-schedule');
-const fs = require('fs');
-const Logged = require('./Logger.js');
+const sqlite3 = require('sqlite3');
+const config = require("./config");
+const Logger = require('./Logger');
+
+function getDB() {
+    return new sqlite3.Database(config.db_name);
+}
+
+function addRecipient(chatId, cb) {
+    const db = getDB();
+    const stmt = db.prepare("INSERT INTO daily_recipients VALUES (?)");
+    stmt.run([chatId], (err) => {
+        if (err) {
+            Logger.logErr(err);
+        }
+        if (cb) {
+            cb()
+        }
+    })
+    stmt.finalize();
+    db.close();
+}
+
+function removeRecipient(chatId, cb) {
+    const db = getDB();
+    const stmt = db.prepare("DELETE FROM daily_recipients WHERE chat_id = ?");
+    stmt.run([chatId], (err) => {
+        if (err) {
+            Logger.logErr(err);
+        }
+        if (cb) {
+            cb()
+        }
+    })
+    stmt.finalize();
+    db.close();
+}
+
+function getRecipients(cb) {
+    const db = getDB();
+    db.serialize(() => {
+        const stmt = db.prepare("SELECT chat_id FROM daily_recipients");
+        stmt.all([], (err, rows) => {
+            if (err) {
+                Logger.logErr(err);
+            }
+            if (!rows) {
+                cb([])
+            } else {
+                const names = rows.map(r => r.chat_id);
+                cb(names);
+            }
+        });
+        stmt.finalize();
+    })
+    db.close();
+}
 
 
 const funcs = {
 // Init the function sendMessage to be called on a schedule
 // time: chron-type string for scheduling
-// filename: filename for participant list
 // returns a recipient list and the scheduled job wrapped in an object
 
-    init: function(time, filename, sendMessages) {
-        var recipients = [];
-        fs.readFile(filename, "utf8", function(err, data) {
-            if (err) {
-                // console.log("error reading file");
-                throw err;
-            }
-            recipients = JSON.parse(data);
-          });
-        //Daily message
-        const job = schedule.scheduleJob(time, function() {
-            var queue = recipients.slice();
-            sendMessages(queue);
-        });
-    return {recipients, job};
+    init: function(time, sendMessages, onFinished) {
+        console.log('init')
+        getRecipients(recipients => {
+            console.log(recipients)
+            const job = schedule.scheduleJob(time, function() {
+                sendMessages(recipients);
+            });
+            onFinished({recipients, job});
+        })
     },
-
-    addRecipient: function(id, filename, cb) {
-        var found = false;
-        var oldData = [];
-        fs.readFile(filename, "utf8", function(err, data) {
-            if (err) {
-                // Logger.errLog("Error reading file when adding new recipient");
-                throw err;
-            }
-            oldData = JSON.parse(data);
-            // found = oldData.indexOf(id) !== -1;
-            if (oldData.indexOf(id) === -1) {
-                oldData.push(id);
-                fs.writeFile(filename, JSON.stringify(oldData), "utf8", function(err) {
-                    if (err) {
-                        // Logger.errLog("Error appending new id to file");
-                        throw err;
-                    }
-                    cb();
-                });
-            }
-        });
-
-    },
-
-    removeRecipient: function(id, filename, cb) {
-        var index = -1;
-        var oldData = [];
-        fs.readFile(filename, "utf8", function(err, data) {
-            if (err) {
-                // Logger.errLog("Error reading file when adding new recipient");
-                throw err;
-            }
-            oldData = JSON.parse(data);
-            index = oldData.indexOf(id);
-            if (index !== -1) {
-                oldData.splice(index, 1);
-                const newData = JSON.stringify(oldData);
-                fs.writeFile(filename, newData, "utf8", function(err) {
-                    if (err) {
-                        // Logger.errLog("Error writing new stuff to file, recipient list may have corrupted");
-                        throw err;
-                    }
-                    cb();
-                });
-            }
-        });
-    }
+    addRecipient,
+    removeRecipient
 
 };
 

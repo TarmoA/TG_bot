@@ -1,25 +1,24 @@
-const sqlite3 = require('sqlite3').verbose();
+const sqlite3 = require('sqlite3');
+const config = require("./config");
 const Logger = require("./Logger.js");
 
 function getDB() {
-    return new sqlite3.Database('huhut_database.sqlite');
+    return new sqlite3.Database(config.db_name);
 }
 
 function storeUser(chatId, username, cb) {
     const db = getDB();
-    // db.serialize(() => {
-        const stmt = db.prepare("INSERT INTO known_users VALUES (?, ?)");
-        stmt.run([chatId, username], (err) => {
-            if (err) {
-                Logger.logErr(err);
-            }
-            if (cb) {
-                cb()
-            }
-        })
-        stmt.finalize();
-        db.close();
-    // })
+    const stmt = db.prepare("INSERT INTO known_users VALUES (?, ?)");
+    stmt.run([chatId, username], (err) => {
+        if (err) {
+            Logger.logErr(err);
+        }
+        if (cb) {
+            cb()
+        }
+    })
+    stmt.finalize();
+    db.close();
 }
 
 /**
