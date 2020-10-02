@@ -1,5 +1,5 @@
 const Slimbot = require("slimbot");
-const config = require("../config");
+const config = require("../config/config");
 const slimbot = new Slimbot(config.token);
 const HuhuGen = require("./huhu.js");
 const generator = new HuhuGen();

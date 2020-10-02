@@ -1,6 +1,6 @@
 var schedule = require('node-schedule');
 const sqlite3 = require('sqlite3');
-const config = require("../config");
+const config = require("../config/config");
 const Logger = require('./Logger');
 
 function getDB() {
