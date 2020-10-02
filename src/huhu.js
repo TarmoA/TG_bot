@@ -1,5 +1,5 @@
 
-const data = require('./words');
+const data = require('../data/words');
 
 
 class HuhuGen  {

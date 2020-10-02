@@ -1,8 +1,9 @@
 const fs = require('fs');
+const config = require("../config");
 
 
-var logFile = fs.createWriteStream("./log.txt", {flags: 'a'});
-var errFile = fs.createWriteStream("./errlog.txt", {flags: 'a'});
+var logFile = fs.createWriteStream(config.logfile, {flags: 'a'});
+var errFile = fs.createWriteStream(config.error_logfile, {flags: 'a'});
 
 function logToFile(message, responseSent) {
     const date = message.date !== undefined ? new Date(message.date*1000).toLocaleString() : "-1";
