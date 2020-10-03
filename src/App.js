@@ -9,25 +9,25 @@ const botName = config.bot_name;
 const knownUserStore = require('./KnownUserStore.js');
 
 
+function parseArgsFromMessage(command, text) {
+    return text.replace(command, '').replace(`@${botName}`, '').trim();
+}
+
 function parseMsg(msg, cb) {
     const text = msg.text;
     if (text.match("/ping")) {
         cb("pong")
     } else if (text.match("/huhu(@"+botName+")?")) {
         const username = msg.from.first_name;
-        const cleared = text.replace('/huhu', '').replace(`@${botName}`, '').trim();
-        if (cleared) {
-            cb(generator.generateHuhu([cleared], true))
-            return;
+        const parsedNames = parseArgsFromMessage('/huhu', text)
+        if (parsedNames) { // message contains a name
+            cb(generator.generateHuhu([parsedNames], true))
+            addKnownName(msg.chat.id, parsedNames, () => {});
+        } else {
+            addKnownName(msg.chat.id, username, names => {
+                cb(generator.generateHuhu(names))
+            });
         }
-        knownUserStore.getUsers(msg.chat.id, knownUsers => {
-            let users = knownUsers
-            if (!knownUsers.includes(username)) {
-                knownUserStore.storeUser(msg.chat.id, username)
-                users = knownUsers.concat([username]);
-            }
-            cb(generator.generateHuhu(users))
-        });
     } else if (text.match("/subscribe(@"+botName+")?")) {
         DailyMessage.addRecipient(msg.chat.id, function() {
             reschedule();
@@ -39,19 +39,22 @@ function parseMsg(msg, cb) {
             cb("unsub ok"); // maybe
         });
     } else if (text.match("/lisaanimi(@" + botName + ")?")) {
-        addUsers(msg);
+        const name = parseArgsFromMessage('/lisaanimi', text);
+        addKnownName(msg.chat.id, name, () => {});
     }
 }
 
-function addUsers(msg) {
-    const text = msg.text;
-    const names = text.split(" ");
-    names.splice(0,1);
-    names
-    .filter(n => n.trim() !== "")
-    .forEach(name => {
-        knownUserStore.storeUser(msg.chat.id, name)
-    })
+/**
+ * cb is called with list of known users
+ */
+function addKnownName(chatId, name, cb) {
+    knownUserStore.getUsers(chatId, knownUsers => {
+        if (!knownUsers.includes(name)) {
+            knownUserStore.storeUser(chatId, name, () => cb(knownUsers.concat([name])))
+            return;
+        }
+        return cb(knownUsers);
+    });
 }
 
 //Makes the bot not respons to messages for a minute
